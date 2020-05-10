@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>BootRBAC</h1>
+
+<blockquote><p>基于springboot、shiro、jwt的后台管理系统，权限控制的方式为RBAC。</p></blockquote>
+
+<h3>技术点</h3>
+
+<ol><li>后端框架:springboot、Mybatis、Druid、shiro、jjwt</li><li>数据存储\缓存:Mysql、Redis</li><li>模板引擎:thymeleaf、layui</li><li>项目依赖管理:Maven</li><li>接口:swagger2</li></ol>
+
+<h3>系统分析</h3>
+
+<blockquote><p>此项目以前后端分离的方式实现一个基于<strong>资源</strong>的后台权限管理系统，权限管理包括<strong>用户认证</strong>和<strong>用户授权</strong>两部分</p></blockquote>
+
+<h4>用户认证</h4>
+
+<ul><li><p>用户访问系统，系统要验证用户身份的合法性。常用的验证的方式:用户名密码方式、token校验</p></li><li><p>用户认证流程图</p><p>&lt;img src=&quot;images/at.png&quot; style=&quot;float:left&quot;/&gt;</p></li></ul>
+
+<h4>用户授权</h4>
+
+<ul><li><p>用户通过认证后，系统对用户访问资源进行控制，用户具有该资源的访问权限方可访问</p></li><li><p>用户授权流程图</p><p>&lt;img src=&quot;images/ar.png&quot; style=&quot;float:left&quot;/&gt;</p></li></ul>
+
+<h4>表结构设计</h4>
+
+<ul><li><p>一共有7张表，源文件中提供了sql</p></li><li><p>ER图</p><p>&lt;img src=&quot;images/sql.png&quot; style=&quot;float:left&quot;/&gt;</p></li></ul>
+
+<h3>环境搭建</h3>
+
+<h4>数据库相关</h4>
+
+<ol><li><p>Mybatis框架和Druid数据源的配置(详见application.properties)</p></li><li><p>使用Mybatis的逆向工程生成实体类(配置文件generatorConfig.xml)</p></li></ol>
+
+<blockquote><p>这里使用逆向工程有一个bug，mapper文件里会生成重复代码，没找到原因</p></blockquote>
+
+<ol><li>访问http://localhost:8080/druid/login.html可进入druid提供的SQL监控</li></ol>
+
+<h4>集成swagger2</h4>
+
+<blockquote><p>使用swagger可以让接口文档在线自动生成、还可以直接进行接口功能测试</p></blockquote>
+
+<ol><li><p>在配置文件中开启swagger的开关</p></li><li><p>创建<code>SwaggerConfig</code>配置类将swagger注入Spring，并添加一些配置</p></li><li><p>访问http://localhost:8080/swagger-ui.html可进入接口文档</p></li></ol>
+
+<h4>集成Reids</h4>
+
+<ol><li>本地或远程开启一个redis服务</li><li>配置redis连接池(详见application.properties)</li><li>redis默认序列化时会使用JDK序列化器，使得redis中的可以和value不可读，这里需要自定义序列化器 <a href="https://blog.csdn.net/weixin_41657493/article/details/92851382">自定义redis序列化方式</a></li><li>创建RedisConfig配置类指定<code>redisTemplate</code>序列化方式为自定义</li><li>创建redis的工具类<code>RedisService</code>,对<code>redisTemplate</code>进行了封装</li></ol>
+
+<h4>统一响应封装</h4>
+
+<blockquote><p>现在前后端分离很普遍，前后端的交互一般使用json的形式，这里也封装一个统一的返回格式</p></blockquote>
+
+<ol><li>创建一个<code>DataResult</code>的泛型类作为统一返回格式，有三个属性<code>code</code>、<code>msg</code>、<code>data</code></li><li>封装一个统一响应code的枚举类<code>BaseResponseCode</code></li><li>封装<code>DataResult</code>实现对code枚举类的接收</li></ol>
+
+<h4>全局异常统一处理</h4>
+
+<blockquote><p>系统中一般是编译异常和运行时异常，运行时异常包括我们自定义的一些业务异常，需要一层层的向上抛，在controller层通过try...catch来处理，但是使用try..catch很难看也很难维护，Spring为我们提供了三种统一异常处理的方式:</p><p>a、在controller中使用@ExceptionHandler注解</p><p>b、自定义Resolver实现HandlerExceptionResolver接口</p><p>c、使用@ControllerAdvice+@ExceptionHandler注解    (使用这一种)</p></blockquote>
+
+<ol><li>创建一个<code>RestExceptionHandler</code>类加上注解</li><li>在类中声明异常捕获的方法</li></ol>
+
+<h4>使用Hibernate Validator进行数据校验</h4>
+
+<blockquote><p>主要用于接口api的入参校验和封装工具类在代码中校验</p></blockquote>
+
+<ul><li>常用的注解<ul><li><code>@NotEmpty</code>用在集合类上面</li><li><code>@NotBlank</code>用在String上面</li><li><code>@NotNull</code>用在基本数据类型上</li><li><code>@Vlaid</code>启用校验</li></ul></li><li>在<code>RestExceptionHandler</code>中添加校验异常</li></ul>
+
+<h4>集成JWT(Json Web Token)</h4>
+
+<blockquote><p>JWT全称JSON  Web Tokens，是一种规范化token。是对token技术提出的一套规范。</p><p>jwt的学习可以参考<a href="http://www.ruanyifeng.com/blog/2018/07/json_web_token-tutorial.html">JSON Web Token 入门教程</a></p></blockquote>
+
+<ol><li>pom文件引入相关依赖</li><li><code>application.properties</code>中配置相关属性和密钥</li><li>创建配置读取类，解决静态工具类无法读取配置文件的问题</li><li>创建<code>JwtTokenUtil</code>类，封装jwt常用的方法</li></ol>
+
+<h4>集成shiro框架</h4>
+
+<blockquote><p>shiro是一个轻量级的权限管理框架，用于实现用户认证(Authenticator)、用户授权(Authorizer)。</p><p>shiro的学习可参考 </p><p><a href="https://www.iteye.com/blog/jinnianshilongnian-2018398">跟我学shiro</a></p><p><a href="https://juejin.im/post/59f1b2766fb9a0450e755993#heading-0">Shiro + JWT + Spring Boot Restful 简易教程</a></p></blockquote>
+
+<ul><li><p>步骤:</p><ol><li>由于使用JWT作为用户凭证，需要自定义token类继承<code>UsernamePasswordToken</code>重写方法</li><li>自定义token过滤器继承<code>AccessControlFilter</code>,这个类主要是拦截用户认证的请求，首先校验客户端是否携带了token，如果没有，直接通过response返回，然后主体提交给自定义realm进行认证和授权</li><li>自定义域继承<code>AuthorizingRealm</code>重写<code>doGetAuthorizationInfo</code>和<code>doGetAuthenticationInfo</code>,前者是当需要检测用户权限时调取，后者是用户认证时调取</li><li>自己实现 CredentialsMatcher 的一个类来实现定制化的账户密码验证机制</li><li><p>配置类中配置<code>Realm</code>、<code>securityManager</code>、<code>shiroFilterFactoryBean</code>以及配置shiro支持aop</p></li></ol></li><li><p>认证流程源码</p><p><code>txt
+    客户端访问
+    ==&gt; 所有被shiro拦截的请求进入CustomAccessControlFilter
+    ==&gt; 主体提交给SecurityManager(AuthenticatingSecurityManager)
+    ==&gt; 有缓存就从缓存中获取认证信息,如果没有则执行自定义域中doGetAuthenticationInfo()方法
+    ==&gt; 最后会提交给自定义的验证器进行验证(成功或失败)
+</code></p></li><li><p>授权流程源码</p><p>&gt; 必须认证成功才能执行授权</p><p><code>txt
+    主体授权(subject.isPermitted())、subject.checkRole(&quot;xxx角色&quot;)、shiro前端标签授权、后端授权注解(@RequirePermissions(&quot;sys:klog:list&quot;))
+    ==&gt; SecurityManager(AuthorizingSecurityManager)执行授权
+    ==&gt; 有缓存就从缓存中获取认证信息,如果没有则执行自定义域中doGetAuthorizationInfo()方法
+    ==&gt; 拿到后把用户拥有的权限信息存入缓存
+    ==&gt; 返回用户所拥有的权限信息
+</code></p></li></ul>
+
+<h3>系统功能实现</h3>
+
+<h4>主页初始化</h4>
+
+<ul><li>获取首页数据接口</li><li>从Token获取用户id<ul><li>获取用户信息和权限树信息封装成VO返回</li></ul></li></ul>
+
+<h4>组织管理-菜单权限管理</h4>
+
+<ul><li><p>获取所有的菜单权限数据 </p><ul><li><p>权限标识:<code>sys:permission:list</code></p></li></ul></li><li><p>菜单权限树-只递归查询到菜单接口  </p><ul><li><p>权限标识:<code>sys:permission:update || sys:permission:add</code></p></li></ul></li><li><p>菜单权限树-递归查询所有接口</p><ul><li><p>权限标识:<code>sys:role:update || sys:role:add</code></p><p>&gt; 这段递归权限层级的代码可以研究下</p><p><code></code>java
+    /**</p></li><li>查询到菜单层级的权限</li><li><p>@return 单层级的权限树
+    */
+    @Override
+    public List&lt;PermissionRespNodeVO&gt; selectAllMenuByTree() {
+    List&lt;SysPermission&gt; list = sysPermissionMapper.selectAll();
+    List&lt;PermissionRespNodeVO&gt; result = new ArrayList&lt;&gt;();
+    //创建默认顶级菜单
+    PermissionRespNodeVO respNodeVO = new PermissionRespNodeVO();
+    respNodeVO.setId(&quot;0&quot;);
+    respNodeVO.setTitle(&quot;默认顶级菜单&quot;);
+    //添加子层级权限，递归遍历到菜单
+    respNodeVO.setChildren(getTree(list, true));
+    result.add(respNodeVO);
+    return result;
+    }</p><p>/**</p></li><li>查询所有层级权限</li><li><p>@return 所有层级权限树
+    */
+    @Override
+    public List&lt;PermissionRespNodeVO&gt; selectAllTree() {
+    //添加子层级权限，递归遍历到按钮
+    return getTree(selectAll(), false);
+    }</p><p>/**</p></li><li>type=true  递归遍历到菜单</li><li><p>type=false 递归遍历到按钮
+    */
+    private List&lt;PermissionRespNodeVO&gt; getTree(List&lt;SysPermission&gt; all, boolean type) {
+    List&lt;PermissionRespNodeVO&gt; list = new ArrayList&lt;&gt;();
+    if (all.isEmpty()) {
+    return list;
+    }
+    for (SysPermission sysPermission : all) {
+    //从目录开始遍历
+    if (sysPermission.getPid().equals(&quot;0&quot;)) {
+    //新建一个权限节点
+    PermissionRespNodeVO respNodeVO = new PermissionRespNodeVO();
+    BeanUtils.copyProperties(sysPermission, respNodeVO);
+    respNodeVO.setTitle(sysPermission.getName());
+    if (type) {
+    //递归遍历到菜单
+    respNodeVO.setChildren(getChildExBtn(sysPermission.getId(), all));
+    } else {
+    //递归遍历到按钮
+    respNodeVO.setChildren(getChild(sysPermission.getId(), all));
+    }
+    list.add(respNodeVO);
+    }
+    }
+    return list;
+    }</p><p>/**</p></li><li><p>只递归到菜单
+    */
+    private List&lt;PermissionRespNodeVO&gt; getChildExBtn(String id, List&lt;SysPermission&gt; all) {
+    List&lt;PermissionRespNodeVO&gt; list = new ArrayList&lt;&gt;();
+    for (SysPermission s : all) {
+    //找出子级权限,排除按钮
+    if (s.getPid().equals(id) &amp;&amp; s.getType() != 3) {
+    PermissionRespNodeVO respNodeVO = new PermissionRespNodeVO();
+    BeanUtils.copyProperties(s, respNodeVO);
+    respNodeVO.setTitle(s.getName());
+    respNodeVO.setChildren(getChildExBtn(s.getId(), all));
+    list.add(respNodeVO);
+    }
+    }
+    return list;
+    }</p><p>/**</p></li><li><p>递归遍历所有数据
+    */
+    private List&lt;PermissionRespNodeVO&gt; getChild(String id, List&lt;SysPermission&gt; all) {
+    List&lt;PermissionRespNodeVO&gt; list = new ArrayList&lt;&gt;();
+    for (SysPermission s : all) {
+    if (s.getPid().equals(id)) {
+    PermissionRespNodeVO respNodeVO = new PermissionRespNodeVO();
+    BeanUtils.copyProperties(s, respNodeVO);
+    respNodeVO.setTitle(s.getName());
+    respNodeVO.setChildren(getChild(s.getId(), all));
+    list.add(respNodeVO);
+    }
+    }
+    return list;
+    }
+    <code></code></p></li></ul></li><li><p>新增菜单权限接口</p><ul><li><p>权限标识:<code>sys:permission:add</code></p></li><li><p>在调用mapper层插入之前要验证菜单是否合法</p></li></ul></li><li><p>编辑菜单权限接口</p><ul><li><p>权限标识:<code>sys:permission:add</code></p></li><li><p>接收到VO后要校验是否合法</p></li><li>如果所属菜单发生了变化，需要判断是否有子集，如果有抛出异常</li><li><p>如果授权标识符发生了变化要查询出拥有该权限的所有用户，在redis中设置刷新Token，并且删除用户缓存信息</p></li></ul></li><li><p>删除菜单权限接口</p><ul><li><p>权限标识:<code>sys:permission:delete</code></p></li><li>判断是否有子集关联，如果有抛出异常</li><li>解除角色和菜单权限的关联</li><li>逻辑删除权限数据</li><li>如果删除的权限有关联的角色信息，在redis中设置刷新Token，并且删除用户缓存信息</li></ul></li></ul>
+
+<h4>组织管理-用户管理</h4>
+
+<ul><li>用户登陆接口<ul><li>获得用户的AccessToken和refreshToken</li></ul></li><li>分页获取用户列表接口<ul><li>权限标识:<code>sys:user:list</code></li><li>使用pageHelper进行分页</li></ul></li><li>新增用户接口<ul><li>权限标识:<code>sys:user:add</code></li></ul></li><li>查询用户拥有的角色数据接口<ul><li>权限标识:<code>sys:user:role:update</code></li><li>查询拥有角色集合和所有角色集合</li></ul></li><li>保存用户拥有的角色接口<ul><li>权限标识:<code>sys:user:role:update</code></li><li>维护用户角色关联表</li><li>标记关联用户自动刷新、删除缓存</li></ul></li><li>刷新token接口<ul><li>校验刷新token是否有效</li><li>校验刷新token是否被加入黑名单</li></ul></li><li>列表修改用户信息接口<ul><li>权限标识:<code>sys:user:update</code></li><li>如果用户被管理员锁定，redis中标记账户被锁定</li></ul></li><li>批量/单个删除用户接口<ul><li>权限标识:<code>sys:user:delete</code></li><li>逻辑删除用户</li><li>redis标记用户删除，过期时间为token剩余时间</li><li>删除用户缓存</li></ul></li><li>用户退出登陆<ul><li>获取主体，主体退出</li><li>把accessToken加入黑名单</li><li>把refreshToken加入黑名单</li></ul></li><li>列表修改用户信息接口<ul><li>权限标识:<code>sys:user:update</code></li></ul></li><li>修改个人密码接口<ul><li>校验旧密码，保存新密码</li><li>把accessToken加入黑名单</li><li>把refreshToken加入黑名单</li><li>删除用户缓存信息</li></ul></li></ul>
+
+<h4>组织管理-部门管理</h4>
+
+<ul><li><p>获取所有部门数据接口</p><ul><li><p>权限标识:<code>sys:dept:list</code></p></li></ul></li><li><p>部门树形结构列表接口</p><ul><li><p>权限标识:<code>sys:user:update || sys:user:add || sys:dept:update || sys:dept:add   </code></p></li><li>更新部门信息时需要去除这个部门的叶子节点</li><li><p>递归获取部门树</p></li></ul></li><li><p>新增部门数据接口</p><ul><li><p>权限标识:<code>sys:dept:add</code></p></li><li><p>部门关系编码=redis记录的部门编码+父级关系编码</p></li></ul></li><li><p>更新部门数据接口</p><ul><li><p>权限标识:<code>sys:dept:put</code></p></li><li><p>此方法需要开启事务回滚</p></li><li><p>首先保存更新部门数据</p></li><li><p>维护层级关系，需要查出旧的父级部门层级关系编码、新的层架关系编码、旧的关系编码</p></li><li><p>sql如下</p><p><code>xml
+    &lt;!-- 维护Relation_code的层级关系--&gt;
+    &lt;update id=&quot;updateRelationCode&quot;&gt;
+    update sys_dept
+    set relation_code=replace(relation_code,#{oldStr},#{newStr})
+    where relation_code like concat(#{relationCode},&quot;%&quot;)
+    &lt;/update&gt;
+</code></p></li></ul></li><li><p>删除部门接口</p><ul><li><p>权限标识:<code>sys:dept:delete</code></p></li><li>如果它和它自己的叶子节点有关联用户，抛出异常</li><li>逻辑删除部门数据</li></ul></li></ul>
+
+<h4>组织管理-角色管理</h4>
+
+<ul><li><p>分页获取角色数据接口</p><ul><li><p>权限标识:<code>sys:role:list</code></p></li><li><p>使用PageHelper进行分页</p></li></ul></li><li><p>新增角色数据接口</p><ul><li><p>权限标识:<code>sys:role:add</code></p></li><li>开启事务回滚</li><li>保存角色信息</li><li><p>如果角色包含权限，则调用<code>RolePermissionServiceImpl</code>维护角色和权限信息</p></li></ul></li><li><p>获取角色详情接口</p><ul><li><p>权限标识:<code>sys:role:detail</code></p></li><li><p>获取基本信息和用户所拥有的菜单权限</p></li></ul></li><li><p>更新角色信息接口</p><ul><li><p>权限标识:<code>sys:role:update</code></p></li><li>开启事务回滚</li><li>保存角色基本信息</li><li>维护角色和菜单权限关联信息</li><li><p>标记关联用户自动刷新、删除缓存</p></li></ul></li><li><p>删除角色信息接口</p><ul><li><p>权限标识:<code>sys:role:delete</code></p></li><li>逻辑删除角色信息</li><li>删除角色和菜单关联数据</li><li>删除角色和用户关联数据</li><li>标记关联用户自动刷新、删除缓存</li></ul></li></ul>
+
+<h4>系统管理-日志管理</h4>
+
+<blockquote><p>自定义注解，配置AOP实现用户操作日志功能</p></blockquote>
+
+<ul><li><p>分页查找操作日志接口</p><ul><li><p>权限标识:<code>sys:log:list</code></p></li><li><p>使用PageHelper进行分页</p></li></ul></li><li><p>删除日志接口</p><ul><li><p>权限标识:<code>sys:log:delete</code></p></li><li>批量/单个删除合并，sql使用<code>&lt;foreach&gt;</code>进行遍历id，批量操作</li></ul></li></ul>
+
+<h4>系统管理-SQL监控</h4>
+
+<ul><li>前端跳转到/druid/sql.html</li></ul>
+
+<h4>系统管理-接口管理</h4>
+
+<ul><li>前端跳转到/swager-ui.html</li></ul>
+</body>
+</html>
