@@ -63,7 +63,7 @@ public class CustomHashedCredentialsMatcher extends HashedCredentialsMatcher {
         /**
          * 判断这个登录用户是否要主动去刷新
          *
-         * 如果key=Constant.JWT_REFRESH_KEY+userId大于accessToken说明是在accessToken不是重新生成的
+         * 如果key=Constant.JWT_REFRESH_KEY+userId大于accessToken说明accessToken不是重新生成的
          * 这样就要判断它是否刷新过了/或者是否新生成的token
          */
         if (redisService.hasKey(Constant.JWT_REFRESH_KEY + userId)) {

@@ -68,11 +68,15 @@ public class UserServiceImpl implements UserService {
         }
         LoginRespVO respVO = new LoginRespVO();
         BeanUtils.copyProperties(sysUser, respVO);
-        //获得token
+
         HashMap<String, Object> claims = new HashMap<>();
+        //获得拥有的权限标识符
         claims.put(Constant.JWT_PERMISSIONS_KEY, getPermissionsByUserId(sysUser.getId()));
+        //获得拥有的角色名称
         claims.put(Constant.JWT_ROLES_KEY, getRolesByUserId(sysUser.getId()));
         claims.put(Constant.JWT_USER_NAME, sysUser.getUsername());
+
+        //获得accessToken
         String accessToken = JwtTokenUtil.getAccessToken(sysUser.getId(), claims);
 
         //获得刷新token
@@ -274,12 +278,12 @@ public class UserServiceImpl implements UserService {
         String userId = JwtTokenUtil.getUserId(accessToken);
 
         /**
-         * 把accessToken加入黑名单
+         * 把accessToken加入黑名单，设置过期时间为Token的剩余时间
          */
         redisService.set(Constant.JWT_ACCESS_TOKEN_BLACKLIST + accessToken, userId, JwtTokenUtil.getRemainingTime(accessToken), TimeUnit.MILLISECONDS);
 
         /**
-         * 把refreshToken加入黑名单
+         * 把refreshToken加入黑名单，设置过期时间为Token的剩余时间
          */
         redisService.set(Constant.JWT_REFRESH_TOKEN_BLACKLIST + accessToken, userId, JwtTokenUtil.getRemainingTime(refreshToken), TimeUnit.MILLISECONDS);
 
@@ -332,7 +336,7 @@ public class UserServiceImpl implements UserService {
         /**
          * 把refreshToken加入黑名单 禁止再拿来刷新token
          */
-        redisService.set(Constant.JWT_REFRESH_TOKEN_BLACKLIST + accessToken, userId, JwtTokenUtil.getRemainingTime(refreshToken), TimeUnit.MILLISECONDS);
+        redisService.set(Constant.JWT_REFRESH_TOKEN_BLACKLIST + refreshToken, userId, JwtTokenUtil.getRemainingTime(refreshToken), TimeUnit.MILLISECONDS);
 
         /**
          * 删除用户缓存信息

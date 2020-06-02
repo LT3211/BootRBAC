@@ -51,6 +51,7 @@ public class HomeServiceImpl implements HomeService {
 //                "        \"url\": \"string\"\n" +
 //                "    }\n" +
 //                "]";
+        //根据用户id获取所拥有的权限列表树，只递归到菜单
         List<PermissionRespNodeVO> list = permissionService.permissionTreeList(userId);
         homeRespVO.setMenus(list);
         SysUser sysUser = sysUserMapper.selectByPrimaryKey(userId);

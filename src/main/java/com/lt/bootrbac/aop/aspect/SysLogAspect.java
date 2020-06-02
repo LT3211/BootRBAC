@@ -115,7 +115,6 @@ public class SysLogAspect {
         sysLog.setCreateTime(new Date());
         log.info(sysLog.toString());
         sysLogMapper.insertSelective(sysLog);
-
     }
 
 }

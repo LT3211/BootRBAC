@@ -41,9 +41,9 @@
     <div class="layui-container login">
         <form id="loginForm" action="#" class="layui-form" method="post" layui-form-pane>
             <input name="type"  type="hidden" value="1">
-            <input type="text" name="username" lay-verify="required" placeholder="请输入账号" autocomplete="off"   class="layui-input">
+            <input type="text" name="username" lay-verify="required" value="admin" placeholder="请输入账号" autocomplete="off"   class="layui-input">
             <br>
-            <input type="password" name="password" lay-verify="required" placeholder="请输入密码" autocomplete="off" class="layui-input">
+            <input type="password" name="password" lay-verify="required" value="123456" placeholder="请输入密码" autocomplete="off" class="layui-input">
             <br>
             <a class="layui-btn  layui-btn-normal "  lay-filter="submit" lay-submit="" id="submit">登陆</a>
         </form>
@@ -53,6 +53,7 @@
 <script th:src="@{/layui/layui.js}"></script>
 <script th:src="@{/js/core.util.js}"></script>
 <script th:inline="javascript">
+
     var ctxPath=[[${#httpServletRequest.getContextPath()}]];
 
     layui.use(['form','jquery','carousel'],function () {
@@ -63,8 +64,10 @@
         form.on('submit',function (data) {
             CoreUtil.sendAjax(ctxPath+"/api/user/login",JSON.stringify(data.field),function (res) {
                 layer.msg(res.msg);
+                //登陆成功后把access_token和refresh_token存入本地缓存
                 CoreUtil.setData("access_token",res.data.accessToken);
                 CoreUtil.setData("refresh_token",res.data.refreshToken);
+                //跳转到主页
                 window.location.href=ctxPath+"/index/home";
             },"POST");
             return false;

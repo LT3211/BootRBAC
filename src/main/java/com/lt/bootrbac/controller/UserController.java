@@ -41,6 +41,42 @@ public class UserController {
         return result;
     }
 
+    @GetMapping("/user/logout")
+    @ApiOperation(value = "用户退出登陆")
+    public DataResult logout(HttpServletRequest request) {
+        try {
+            //要把access_Token和refresh_token 加入黑名单
+            String accessToken = request.getHeader(Constant.ACCESS_TOKEN);
+            String refreshToken = request.getHeader(Constant.REFRESH_TOKEN);
+            userService.logout(accessToken, refreshToken);
+        } catch (Exception e) {
+            log.error("logout:{}", e);
+        }
+        return DataResult.success();
+    }
+
+    @GetMapping("/user/token")
+    @ApiOperation(value = "刷新token接口")
+    @MyLog(title = "组织管理-用户管理", action = "刷新token接口")
+    public DataResult<String> refreshToken(HttpServletRequest request) {
+        String refreshToken = request.getHeader(Constant.REFRESH_TOKEN);
+        String s = userService.refreshToken(refreshToken);
+        DataResult result = DataResult.success();
+        result.setData(s);
+        return result;
+    }
+
+    @PutMapping("/user/pwd")
+    @ApiOperation(value = "修改个人密码接口")
+    @MyLog(title = "组织管理-用户管理", action = "修改个人密码接口")
+    public DataResult updatePwd(@RequestBody @Valid UserUpdatePwdReqVO vo, HttpServletRequest request) {
+        String accessToken = request.getHeader(Constant.ACCESS_TOKEN);
+        String refreshToken = request.getHeader(Constant.REFRESH_TOKEN);
+        userService.userUpdatePwd(vo, accessToken, refreshToken);
+        DataResult result = DataResult.success();
+        return result;
+    }
+
     @PostMapping("/users")
     @ApiOperation(value = "分页获取用户列表接口")
     @RequiresPermissions("sys:user:list")
@@ -80,16 +116,6 @@ public class UserController {
         return result;
     }
 
-    @GetMapping("/user/token")
-    @ApiOperation(value = "刷新token接口")
-    @MyLog(title = "组织管理-用户管理", action = "刷新token接口")
-    public DataResult<String> refreshToken(HttpServletRequest request) {
-        String refreshToken = request.getHeader(Constant.REFRESH_TOKEN);
-        String s = userService.refreshToken(refreshToken);
-        DataResult result = DataResult.success();
-        result.setData(s);
-        return result;
-    }
 
     @PutMapping("/user")
     @ApiOperation(value = "列表修改用户信息接口")
@@ -117,18 +143,6 @@ public class UserController {
         return result;
     }
 
-    @GetMapping("/user/logout")
-    @ApiOperation(value = "用户退出登陆")
-    public DataResult logout(HttpServletRequest request) {
-        try {
-            String accessToken = request.getHeader(Constant.ACCESS_TOKEN);
-            String refreshToken = request.getHeader(Constant.REFRESH_TOKEN);
-            userService.logout(accessToken, refreshToken);
-        } catch (Exception e) {
-            log.error("logout:{}", e);
-        }
-        return DataResult.success();
-    }
 
     @GetMapping("/user/info")
     @ApiOperation(value = "用户信息详情接口")
@@ -147,20 +161,8 @@ public class UserController {
     @RequiresPermissions("sys:user:update")
     public DataResult saveUserInfo(@RequestBody UserUpdateDetailInfoReqVO vo, HttpServletRequest request) {
         String accessToken = request.getHeader(Constant.ACCESS_TOKEN);
-
         String userId = JwtTokenUtil.getUserId(accessToken);
         userService.userUpdateDetailInfo(vo, userId);
-        DataResult result = DataResult.success();
-        return result;
-    }
-
-    @PutMapping("/user/pwd")
-    @ApiOperation(value = "修改个人密码接口")
-    @MyLog(title = "组织管理-用户管理", action = "修改个人密码接口")
-    public DataResult updatePwd(@RequestBody @Valid UserUpdatePwdReqVO vo, HttpServletRequest request) {
-        String accessToken = request.getHeader(Constant.ACCESS_TOKEN);
-        String refreshToken = request.getHeader(Constant.REFRESH_TOKEN);
-        userService.userUpdatePwd(vo, accessToken, refreshToken);
         DataResult result = DataResult.success();
         return result;
     }

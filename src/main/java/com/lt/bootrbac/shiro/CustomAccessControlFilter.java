@@ -55,7 +55,8 @@ public class CustomAccessControlFilter extends AccessControlFilter {
             //获得用户端的accessToken
             String accessToken = request.getHeader(Constant.ACCESS_TOKEN);
             //判断客户端是否携带accessToken
-            if (StringUtils.containsWhitespace(accessToken)) {
+            if (StringUtils.isEmpty(accessToken)) {
+                //如果客户端没有携带
                 throw new BusinessException(BaseResponseCode.TOKEN_NOT_NULL);
             }
 

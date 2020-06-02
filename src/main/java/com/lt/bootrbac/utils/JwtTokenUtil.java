@@ -81,6 +81,7 @@ public class JwtTokenUtil {
         }
         builder.setIssuedAt(now);
         if (ttlMillis >= 0) {
+            //设置过期时间，保证每一次签发的Token都不一样
             long expMillis = nowMillis + ttlMillis;
             Date exp = new Date(expMillis);
             builder.setExpiration(exp);

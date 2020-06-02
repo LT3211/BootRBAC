@@ -344,6 +344,11 @@ public class PermissionServiceImpl implements PermissionService {
         }
     }
 
+    /**
+     * 通过用户id获得权限信息
+     * @param userId
+     * @return
+     */
     @Override
     public List<String> getPermissionByUserId(String userId) {
         List<SysPermission> permissions = getPermissions(userId);
@@ -353,6 +358,7 @@ public class PermissionServiceImpl implements PermissionService {
 
         List<String> result = new ArrayList<>();
 
+        //获得权限标识符列表
         for (SysPermission s : permissions) {
             if (!StringUtils.isEmpty(s.getPerms())) {
                 result.add(s.getPerms());
@@ -364,17 +370,20 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     public List<SysPermission> getPermissions(String userId) {
+        //首先通过用户id获取用户角色
         List<String> roleIdsByUserId = userRoleService.getRoleIdsByUserId(userId);
         if (roleIdsByUserId.isEmpty()) {
             return null;
         }
 
+        //然后根据角色获取所有权限id
         List<String> permissionIdsByRoleIds = rolePermissionService.getPermissionIdsByRoleIds(roleIdsByUserId);
 
         if (permissionIdsByRoleIds.isEmpty()) {
             return null;
         }
 
+        //根据id查询权限列表信息
         List<SysPermission> sysPermissions = sysPermissionMapper.selectByIds(permissionIdsByRoleIds);
 
         return sysPermissions;

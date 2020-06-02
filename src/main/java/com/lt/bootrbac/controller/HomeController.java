@@ -27,9 +27,12 @@ public class HomeController {
     @ApiOperation(value = "获取首页数据接口")
     @MyLog(title = "首页模块",action = "获取首页数据接口")
     public DataResult<HomeRespVO> getHome(HttpServletRequest request){
+        //获取用户Token
         String accessToken = request.getHeader(Constant.ACCESS_TOKEN);
+        //从Token中解析除userId
         String userId = JwtTokenUtil.getUserId(accessToken);
         DataResult result = DataResult.success();
+        //获得 用户信息 和 首页导航信息
         result.setData(homeService.getHome(userId));
         return result;
     }
